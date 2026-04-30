@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BambooHR Timesheet Helper</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header>
+    <h1>Timesheet Helper</h1>
+  </header>
+
+  <main>
+    <section id="schedule-form">
+      <h2>Weekly Schedule</h2>
+      <p class="hint">Set your default start/end times per weekday.</p>
+
+      <table id="schedule-table">
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>Block 1</th>
+            <th>Block 2 <span style="font-weight:400;color:#aaa">(optional)</span></th>
+            <th>On</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rows injected by popup.js -->
+        </tbody>
+      </table>
+
+      <button id="save-schedule">Save Schedule</button>
+      <p id="save-status" class="status"></p>
+    </section>
+
+    <section id="fill-section">
+      <h2>Fill Timesheet</h2>
+      <p class="hint">
+        Navigate to your BambooHR timesheet page, then click the button below.
+      </p>
+      <button id="open-preview" disabled>Preview &amp; Fill Last Month</button>
+      <p id="page-status" class="status"></p>
+    </section>
+  </main>
+
+  <script src="popup.js"></script>
+</body>
+</html>

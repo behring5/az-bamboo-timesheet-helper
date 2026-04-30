@@ -1,0 +1,46 @@
+{
+	"manifest_version": 3,
+	"name": "AZ BambooHR Timesheet Helper",
+	"version": "0.2.0",
+	"description": "Auto-fill your BambooHR timesheet for the past month based on a weekly schedule template.",
+
+	"permissions": ["activeTab", "scripting", "storage"],
+
+	"host_permissions": ["https://*.bamboohr.com/*"],
+
+	"action": {
+		"default_popup": "popup/popup.html",
+		"default_icon": {
+			"16": "icons/icon16.png",
+			"48": "icons/icon48.png",
+			"128": "icons/icon128.png"
+		}
+	},
+
+	"content_scripts": [
+		{
+			"matches": ["https://*.bamboohr.com/*"],
+			"js": ["content/page-bridge.js"],
+			"run_at": "document_idle",
+			"world": "MAIN"
+		},
+		{
+			"matches": ["https://*.bamboohr.com/*"],
+			"js": ["content/dates.js", "content/bamboo-api.js", "content/preview.js", "content/content.js"],
+			"run_at": "document_idle"
+		}
+	],
+
+	"web_accessible_resources": [
+		{
+			"resources": ["content/preview.css"],
+			"matches": ["https://*.bamboohr.com/*"]
+		}
+	],
+
+	"icons": {
+		"16": "icons/icon16.png",
+		"48": "icons/icon48.png",
+		"128": "icons/icon128.png"
+	}
+}
