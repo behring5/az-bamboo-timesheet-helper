@@ -1,7 +1,7 @@
 {
 	"manifest_version": 3,
 	"name": "AZ BambooHR Timesheet Helper",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "Auto-fill your BambooHR timesheet for the past month based on a weekly schedule template.",
 
 	"permissions": ["activeTab", "scripting", "storage"],
