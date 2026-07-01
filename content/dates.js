@@ -1,51 +1,99 @@
+// Maps BambooHR month abbreviations (English + German) to 0-based month index.
+// German: Jan Feb Mär Apr Mai Jun Jul Aug Sep Okt Nov Dez
+const MONTH_INDEX = {
+	Jan: 0, Feb: 1, Mar: 2, Mär: 2, Apr: 3, May: 4, Mai: 4,
+	Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Okt: 9, Nov: 10, Dec: 11, Dez: 11,
+};
+
+// Reverse map: 0-based index → canonical English abbreviation (for startsWith matching)
+const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 /**
  * Scans the BambooHR timesheet DOM for days that have a clockPush indicator
  * (public holidays, vacation, sick days, etc.) and returns them as a Set
  * of "YYYY-MM-DD" strings to skip.
  */
 function getSkippableDatesFromDOM(targetYear, targetMonth) {
-  const skip = new Set();
-  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+	const skip = new Set();
 
-  document.querySelectorAll('.TimesheetSlat__extraInfoItem--clockPush').forEach(el => {
-    const slat = el.closest('.TimesheetSlat');
-    if (!slat) return;
+	document.querySelectorAll('.TimesheetSlat__extraInfoItem--clockPush').forEach((el) => {
+		const slat = el.closest('.TimesheetSlat');
+		if (!slat) return;
 
-    const dayDateEl = slat.querySelector('.TimesheetSlat__dayDate');
-    if (!dayDateEl) return;
+		const dayDateEl = slat.querySelector('.TimesheetSlat__dayDate');
+		if (!dayDateEl) return;
 
-    const [monStr, dayStr] = dayDateEl.textContent.trim().split(' ');
-    const monthIndex = MONTHS.indexOf(monStr);
-    if (monthIndex === -1 || !dayStr) return;
+		const [monStr, dayStr] = dayDateEl.textContent.trim().split(' ');
+		const monthIndex = MONTH_INDEX[monStr] ?? -1;
+		if (monthIndex === -1 || !dayStr) return;
 
-    if (monthIndex !== targetMonth - 1) return;
+		if (monthIndex !== targetMonth - 1) return;
 
-    const date = new Date(targetYear, monthIndex, Number(dayStr));
-    skip.add(formatDate(date));
-  });
+		const date = new Date(targetYear, monthIndex, Number(dayStr));
+		skip.add(formatDate(date));
+	});
 
-  return skip;
+	return skip;
 }
 
 /**
- * Waits until at least one "Pay Period Begins" span is present in the DOM.
+ * Waits until at least one TimesheetSlat is present in the DOM.
  * Resolves immediately if already there, otherwise uses MutationObserver.
  * Rejects after 10 seconds.
  */
-function waitForPayPeriod() {
-  return new Promise((resolve, reject) => {
-    const check = () => Array.from(document.querySelectorAll('span'))
-      .find(s => s.textContent.trim() === 'Pay Period Begins');
+function waitForTimesheetSlats() {
+	return new Promise((resolve, reject) => {
+		const check = () => document.querySelector('.TimesheetSlat__dayDate');
 
-    if (check()) { resolve(); return; }
+		if (check()) {
+			resolve();
+			return;
+		}
 
-    const observer = new MutationObserver(() => {
-      if (check()) { observer.disconnect(); resolve(); }
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
+		const observer = new MutationObserver(() => {
+			if (check()) {
+				observer.disconnect();
+				resolve();
+			}
+		});
+		observer.observe(document.body, { childList: true, subtree: true });
 
-    setTimeout(() => { observer.disconnect(); reject(new Error('Timed out waiting for pay period')); }, 10000);
-  });
+		setTimeout(() => {
+			observer.disconnect();
+			reject(new Error('Timed out waiting for timesheet to load'));
+		}, 10000);
+	});
+}
+
+/**
+ * Determines the active month by counting how often each month appears across
+ * all visible TimesheetSlat date elements. The primary month always has far
+ * more entries than any overflow days from an adjacent month.
+ *
+ * Returns { year: number, month: number (1-based) } or null if no slats found.
+ */
+function getActiveMonthFromSlats() {
+	const counts = new Array(12).fill(0);
+
+	document.querySelectorAll('.TimesheetSlat__dayDate').forEach((el) => {
+		const [monStr] = el.textContent.trim().split(' ');
+		const idx = MONTH_INDEX[monStr] ?? -1;
+		if (idx !== -1) counts[idx]++;
+	});
+
+	const dominantIdx = counts.indexOf(Math.max(...counts));
+	if (counts[dominantIdx] === 0) return null;
+
+	// Find one slat for the dominant month to infer the year
+	const sample = Array.from(document.querySelectorAll('.TimesheetSlat__dayDate')).find((el) => {
+		const [monStr] = el.textContent.trim().split(' ');
+		return (MONTH_INDEX[monStr] ?? -1) === dominantIdx;
+	});
+
+	const [, dayStr] = sample.textContent.trim().split(' ');
+	const date = inferYear(dominantIdx, Number(dayStr));
+
+	return { year: date.getFullYear(), month: dominantIdx + 1 };
 }
 
 /**
@@ -57,21 +105,18 @@ function waitForPayPeriod() {
  * this handles year boundaries correctly (e.g. a December slat read in January).
  */
 function extractSlatDate(labelText) {
-  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+	const span = Array.from(document.querySelectorAll('span')).find((s) => s.textContent.trim() === labelText);
+	if (!span) return null;
 
-  const span = Array.from(document.querySelectorAll('span'))
-    .find(s => s.textContent.trim() === labelText);
-  if (!span) return null;
+	const slat = span.closest('.TimesheetSlat');
+	const dayDateEl = slat?.querySelector('.TimesheetSlat__dayDate');
+	if (!dayDateEl) return null;
 
-  const slat = span.closest('.TimesheetSlat');
-  const dayDateEl = slat?.querySelector('.TimesheetSlat__dayDate');
-  if (!dayDateEl) return null;
+	const [monStr, dayStr] = dayDateEl.textContent.trim().split(' ');
+	const monthIndex = MONTH_INDEX[monStr] ?? -1;
+	if (monthIndex === -1 || !dayStr) return null;
 
-  const [monStr, dayStr] = dayDateEl.textContent.trim().split(' ');
-  const monthIndex = MONTHS.indexOf(monStr);
-  if (monthIndex === -1 || !dayStr) return null;
-
-  return inferYear(monthIndex, Number(dayStr));
+	return inferYear(monthIndex, Number(dayStr));
 }
 
 /**
@@ -82,49 +127,46 @@ function extractSlatDate(labelText) {
  * so we can pick the one that matches the period currently in view.
  */
 function getAllPayPeriods() {
-  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const periods = [];
+	const periods = [];
 
-  const allSpans = Array.from(document.querySelectorAll('span'));
+	const allSpans = Array.from(document.querySelectorAll('span'));
 
-  const beginsSpans = allSpans.filter(s => s.textContent.trim() === 'Pay Period Begins');
-  const endsSpans   = allSpans.filter(s => s.textContent.trim() === 'Pay Period Ends');
+	const beginsSpans = allSpans.filter((s) => s.textContent.trim() === 'Pay Period Begins');
+	const endsSpans = allSpans.filter((s) => s.textContent.trim() === 'Pay Period Ends');
 
-  function dateFromSlat(span) {
-    const slat = span.closest('.TimesheetSlat');
-    const dayDateEl = slat?.querySelector('.TimesheetSlat__dayDate');
-    if (!dayDateEl) return null;
+	function dateFromSlat(span) {
+		const slat = span.closest('.TimesheetSlat');
+		const dayDateEl = slat?.querySelector('.TimesheetSlat__dayDate');
+		if (!dayDateEl) return null;
 
-    const [monStr, dayStr] = dayDateEl.textContent.trim().split(' ');
-    const monthIndex = MONTHS.indexOf(monStr);
-    if (monthIndex === -1 || !dayStr) return null;
+		const [monStr, dayStr] = dayDateEl.textContent.trim().split(' ');
+		const monthIndex = MONTH_INDEX[monStr] ?? -1;
+		if (monthIndex === -1 || !dayStr) return null;
 
-    return inferYear(monthIndex, Number(dayStr));
-  }
+		return inferYear(monthIndex, Number(dayStr));
+	}
 
-  // Pair each "Begins" with the nearest "Ends" that comes after it in DOM order.
-  // We use the DOM position (compareDocumentPosition) to find the right partner.
-  for (const beginsSpan of beginsSpans) {
-    const start = dateFromSlat(beginsSpan);
-    if (!start) continue;
+	// Pair each "Begins" with the nearest "Ends" that comes after it in DOM order.
+	// We use the DOM position (compareDocumentPosition) to find the right partner.
+	for (const beginsSpan of beginsSpans) {
+		const start = dateFromSlat(beginsSpan);
+		if (!start) continue;
 
-    // Find the first "Ends" span that appears after this "Begins" span in the DOM
-    const endsSpan = endsSpans.find(e =>
-      beginsSpan.compareDocumentPosition(e) & Node.DOCUMENT_POSITION_FOLLOWING
-    );
+		// Find the first "Ends" span that appears after this "Begins" span in the DOM
+		const endsSpan = endsSpans.find((e) => beginsSpan.compareDocumentPosition(e) & Node.DOCUMENT_POSITION_FOLLOWING);
 
-    let end = endsSpan ? dateFromSlat(endsSpan) : null;
-    if (!end) continue;
+		let end = endsSpan ? dateFromSlat(endsSpan) : null;
+		if (!end) continue;
 
-    // "Pay Period Ends" slat is the first day of the NEXT period — step back one day
-    end = new Date(end);
-    end.setDate(end.getDate() - 1);
+		// "Pay Period Ends" slat is the first day of the NEXT period — step back one day
+		end = new Date(end);
+		end.setDate(end.getDate() - 1);
 
-    periods.push({ start, end });
-  }
+		periods.push({ start, end });
+	}
 
-  periods.sort((a, b) => a.start - b.start);
-  return periods;
+	periods.sort((a, b) => a.start - b.start);
+	return periods;
 }
 
 /**
@@ -137,51 +179,50 @@ function getAllPayPeriods() {
  * Returns { start: Date, end: Date } or null if no periods were found.
  */
 function getPayPeriodFromDOM() {
-  const periods = getAllPayPeriods();
-  if (!periods.length) return null;
+	const periods = getAllPayPeriods();
+	if (!periods.length) return null;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+	const today = new Date();
+	today.setHours(0, 0, 0, 0);
 
-  // 1. Period that contains today
-  const current = periods.find(p => p.start <= today && today <= p.end);
-  if (current) return current;
+	// 1. Period that contains today
+	const current = periods.find((p) => p.start <= today && today <= p.end);
+	if (current) return current;
 
-  // 2. Most recent period that already ended
-  const past = periods.filter(p => p.end < today);
-  if (past.length) return past[past.length - 1];
+	// 2. Most recent period that already ended
+	const past = periods.filter((p) => p.end < today);
+	if (past.length) return past[past.length - 1];
 
-  // 3. Earliest future period (shouldn't happen in practice)
-  return periods[0];
+	// 3. Earliest future period (shouldn't happen in practice)
+	return periods[0];
 }
 
 /**
- * Returns every working day (Mon–Fri) within the best-matching pay period
- * as an array of "YYYY-MM-DD" strings.
- * Falls back to the current calendar month if no pay period markers are found.
+ * Returns every working day (Mon–Fri) for the active month visible on the
+ * timesheet page as an array of "YYYY-MM-DD" strings.
+ * Falls back to the current calendar month if no slats are found.
  */
 function getLastMonthWorkingDays() {
-  const period = getPayPeriodFromDOM();
+	const active = getActiveMonthFromSlats();
 
-  let from, to;
-  if (period) {
-    from = period.start;
-    to   = period.end;
-  } else {
-    // Fallback: current calendar month
-    const now = new Date();
-    from = new Date(now.getFullYear(), now.getMonth(), 1);
-    to   = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  }
+	let from, to;
+	if (active) {
+		from = new Date(active.year, active.month - 1, 1);
+		to = new Date(active.year, active.month, 0);
+	} else {
+		const now = new Date();
+		from = new Date(now.getFullYear(), now.getMonth(), 1);
+		to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+	}
 
-  const days = [];
-  const cursor = new Date(from);
-  while (cursor <= to) {
-    const dow = cursor.getDay();
-    if (dow !== 0 && dow !== 6) days.push(formatDate(cursor));
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  return days;
+	const days = [];
+	const cursor = new Date(from);
+	while (cursor <= to) {
+		const dow = cursor.getDay();
+		if (dow !== 0 && dow !== 6) days.push(formatDate(cursor));
+		cursor.setDate(cursor.getDate() + 1);
+	}
+	return days;
 }
 
 /**
@@ -190,24 +231,24 @@ function getLastMonthWorkingDays() {
  * puts the date within 6 months of today.
  */
 function inferYear(monthIndex, day) {
-  const today = new Date();
-  const currentYear = today.getFullYear();
+	const today = new Date();
+	const currentYear = today.getFullYear();
 
-  for (const year of [currentYear, currentYear - 1, currentYear + 1]) {
-    const candidate = new Date(year, monthIndex, day);
-    const diffMs = Math.abs(today - candidate);
-    if (diffMs < 6 * 30 * 24 * 60 * 60 * 1000) return candidate; // within ~6 months
-  }
+	for (const year of [currentYear, currentYear - 1, currentYear + 1]) {
+		const candidate = new Date(year, monthIndex, day);
+		const diffMs = Math.abs(today - candidate);
+		if (diffMs < 6 * 30 * 24 * 60 * 60 * 1000) return candidate; // within ~6 months
+	}
 
-  // Last resort: use current year
-  return new Date(currentYear, monthIndex, day);
+	// Last resort: use current year
+	return new Date(currentYear, monthIndex, day);
 }
 
 function formatDate(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
+	const y = date.getFullYear();
+	const m = String(date.getMonth() + 1).padStart(2, '0');
+	const d = String(date.getDate()).padStart(2, '0');
+	return `${y}-${m}-${d}`;
 }
 
 /**
@@ -215,33 +256,31 @@ function formatDate(date) {
  * schedule: [{ day: 'Monday', active: bool, start: 'HH:MM', end: 'HH:MM' }, ...]
  */
 function buildEntries(workingDays, schedule, employeeId, trackingId) {
-  const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const entries = [];
+	const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+	const entries = [];
 
-  for (const dateStr of workingDays) {
-    const dow = new Date(dateStr + 'T12:00:00').getDay();
-    const rule = schedule.find(s => s.day === DAY_NAMES[dow]);
-    if (!rule || !rule.active) continue;
+	for (const dateStr of workingDays) {
+		const dow = new Date(dateStr + 'T12:00:00').getDay();
+		const rule = schedule.find((s) => s.day === DAY_NAMES[dow]);
+		if (!rule || !rule.active) continue;
 
-    const blocks = rule.blocks
-      ? rule.blocks.filter(b => b.start && b.end && b.start !== '00:00' && b.end !== '00:00')
-      : [{ start: rule.start, end: rule.end }];
+		const blocks = rule.blocks ? rule.blocks.filter((b) => b.start && b.end && b.start !== '00:00' && b.end !== '00:00') : [{ start: rule.start, end: rule.end }];
 
-    for (const block of blocks) {
-      entries.push({
-        id: null,
-        trackingId,
-        employeeId,
-        date: dateStr,
-        start: block.start,
-        end: block.end,
-        note: '',
-        projectId: null,
-        taskId: null,
-        breakId: null,
-      });
-    }
-  }
+		for (const block of blocks) {
+			entries.push({
+				id: null,
+				trackingId,
+				employeeId,
+				date: dateStr,
+				start: block.start,
+				end: block.end,
+				note: '',
+				projectId: null,
+				taskId: null,
+				breakId: null,
+			});
+		}
+	}
 
-  return entries;
+	return entries;
 }

@@ -1,0 +1,461 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+@font-face {
+  font-family: Fields;
+  src: url(https://staticfe.bamboohr.com/assets/fonts/Fields-Regular.woff2) format("woff2");
+}
+@font-face {
+  font-family: Fields;
+  font-weight: 600;
+  src: url(https://staticfe.bamboohr.com/assets/fonts/Fields-SemiBold.woff2) format("woff2");
+}
+@font-face {
+  font-family: Fields;
+  font-weight: 700;
+  src: url(https://staticfe.bamboohr.com/assets/fonts/Fields-Bold.woff2) format("woff2");
+}
+@font-face {
+  font-family: Inter;
+  src: url(https://staticfe.bamboohr.com/assets/fonts/Inter-Regular.woff2) format("woff2");
+}
+@font-face {
+  font-family: Inter;
+  font-weight: 500;
+  src: url(https://staticfe.bamboohr.com/assets/fonts/Inter-Medium.woff2) format("woff2");
+}
+@font-face {
+  font-family: Inter;
+  font-weight: 600;
+  src: url(https://staticfe.bamboohr.com/assets/fonts/Inter-SemiBold.woff2) format("woff2");
+}
+@font-face {
+  font-family: Inter;
+  font-weight: 700;
+  src: url(https://staticfe.bamboohr.com/assets/fonts/Inter-Bold.woff2) format("woff2");
+}
+@font-face {
+  font-family: Ephesis;
+  src: url(https://staticfe.bamboohr.com/resources/fonts/Ephesis-Regular.woff2) format("woff2"), url(https://staticfe.bamboohr.com/resources/fonts/Ephesis-Regular.woff) format("woff");
+}
+body#popup {
+  /* width: 420px; */
+  min-width: 380px;
+  padding: 12px;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 13px;
+  color: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+}
+
+body#popup h1,
+body#popup h2,
+body#popup h3,
+body#popup h4,
+#bhr-helper-modal h1,
+#bhr-helper-modal h2,
+#bhr-helper-modal h3,
+#bhr-helper-modal h4 {
+  font-family: Fields, sans-serif;
+  margin: 0;
+}
+body#popup h1,
+#bhr-helper-modal h1 {
+  color: #73af00;
+  font-size: 30px;
+  font-weight: 700;
+}
+body#popup h2,
+#bhr-helper-modal h2 {
+  font-family: Inter, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+body#popup .hint,
+#bhr-helper-modal .hint {
+  font-size: 13px;
+  color: #777;
+  margin-bottom: 8px;
+}
+
+header {
+  margin-bottom: 12px;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+section {
+  /* margin-bottom: 16px; */
+}
+
+/* Schedule table */
+#schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+  border: none;
+}
+
+#schedule-table th,
+#schedule-table td {
+  padding: 4px 0px;
+  text-align: left;
+}
+
+#reset-schedule,
+#schedule-table th {
+  font-size: 11px;
+  color: #aaa;
+  font-weight: 500;
+}
+
+#schedule-table tr,
+#schedule-table td {
+  border: none;
+}
+
+#schedule-table tfoot td {
+  padding: 0;
+}
+
+#schedule-table input.time-input {
+  width: 48px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 2px 4px;
+  font-family: monospace;
+  text-align: center;
+}
+#schedule-table input.time-input::-moz-placeholder {
+  color: #bbb;
+  opacity: 1; /* Firefox */
+}
+#schedule-table input.time-input::placeholder {
+  color: #bbb;
+  opacity: 1; /* Firefox */
+}
+
+#schedule-table td {
+  white-space: nowrap;
+}
+
+.block2-cell {
+  white-space: nowrap;
+}
+
+#schedule-table input[type=checkbox] {
+  cursor: pointer;
+}
+
+#reset-schedule {
+  cursor: pointer;
+  padding: 3px 7px;
+  line-height: 1;
+  border-radius: 4px;
+  display: inline-block;
+  margin: auto;
+  margin-top: 5px;
+  float: right;
+  transition: all 0.1s ease-in-out;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
+}
+
+#reset-schedule:hover {
+  background-color: #efefef;
+}
+
+#reset-schedule:active {
+  transform: translateY(1px);
+}
+
+/* PREVIEW MODAL */
+#bhr-helper-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 99998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#bhr-helper-modal {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22);
+  width: 640px;
+  max-width: 95vw;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  color: #1a1a1a;
+  z-index: 99999;
+}
+
+/* Header */
+#bhr-helper-modal .bhr-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid #eee;
+}
+
+#bhr-helper-modal .bhr-modal-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #888;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+#bhr-helper-modal .bhr-modal-close:hover {
+  color: #333;
+}
+
+/* Summary bar */
+#bhr-helper-modal .bhr-summary {
+  padding: 8px 20px;
+  font-size: 12px;
+  color: #555;
+  background: #f9f9f9;
+  border-bottom: 1px solid #eee;
+}
+
+#bhr-helper-modal .bhr-summary span {
+  margin-right: 16px;
+}
+
+.bhr-badge {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.bhr-badge--new {
+  background: #e6f4d7;
+  color: #3a7d00;
+}
+
+.bhr-badge--skip {
+  background: #fef3cd;
+  color: #856404;
+}
+
+.bhr-badge--holiday {
+  background: #fde8e8;
+  color: #c0392b;
+}
+
+/* Table */
+#bhr-helper-modal .bhr-table-wrap {
+  overflow-y: auto;
+  flex: 1;
+  padding: 0 20px;
+}
+
+#bhr-helper-modal table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+}
+
+#bhr-helper-modal th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #888;
+  padding: 6px 8px;
+  border-bottom: 2px solid #eee;
+  position: sticky;
+  top: 0;
+  background: #fff;
+}
+
+#bhr-helper-modal td {
+  padding: 5px 8px;
+  border-bottom: 1px solid #f2f2f2;
+  vertical-align: middle;
+}
+
+#bhr-helper-modal tr.bhr-row--skip td {
+  color: #aaa;
+}
+
+#bhr-helper-modal tr.bhr-row--holiday td {
+  color: #c0392b;
+  text-decoration: line-through;
+}
+
+#bhr-helper-modal input[type=text] {
+  font-size: 12px;
+  font-family: monospace;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 2px 5px;
+  width: 48px;
+  text-align: center;
+}
+
+#bhr-helper-modal input[type=checkbox] {
+  cursor: pointer;
+  accent-color: #73af00;
+}
+
+/* Status column indicator */
+.bhr-status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #73af00;
+}
+
+.bhr-status-dot--skip {
+  background: #ccc;
+}
+
+.bhr-status-dot--holiday {
+  background: #e74c3c;
+}
+
+.bhr-status-dot--success {
+  background: #73af00;
+}
+
+.bhr-status-dot--fail {
+  background: #e74c3c;
+}
+
+.bhr-status-dot--pending {
+  background: #f39c12;
+}
+
+/* Footer */
+#bhr-helper-modal .bhr-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 20px;
+  border-top: 1px solid #eee;
+}
+
+#bhr-helper-modal .bhr-progress {
+  font-size: 12px;
+  color: #555;
+  flex: 1;
+}
+
+/* Buttons */
+.btnBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  padding: 10px 0;
+}
+.btnBox button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  text-align: center;
+}
+
+button {
+  font-family: Inter, sans-serif;
+  font-size: 16px;
+  line-height: 1;
+  display: inline-block;
+  padding: 14px 16px 15px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #fff;
+  transition: all 0.2s ease-in-out;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
+}
+
+button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.bhr-btn--primary {
+  background: #73af00;
+  color: #fff;
+}
+
+.bhr-btn--primary:hover:not(:disabled) {
+  background: #5c8c00;
+}
+
+.bhr-btn--primary:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.bhr-btn--secondary {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.bhr-btn--secondary:hover {
+  background: #e0e0e0;
+}
+
+.clear-block2 {
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 11px;
+  border-radius: 2px;
+  padding: 2px;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+button.clear-block2:hover {
+  /* color: #e74c3c; */
+  background: #eeeeee;
+}
+
+/* Status messages */
+.status {
+  margin-top: 6px;
+  font-size: 12px;
+  min-height: 14px;
+}
+
+.status.success {
+  color: #80ad34;
+}
+
+.status.error {
+  color: #f01800;
+}

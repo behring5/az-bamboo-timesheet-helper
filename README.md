@@ -3,7 +3,9 @@
 A Chrome extension that auto-fills your BambooHR timesheet for the past month based on a saved weekly schedule template — so you never have to click through each day manually.<br>
 <b>Disclaimer:</b> This project is vibe coded.
 
-![Popup showing the weekly schedule editor and Fill Timesheet button](docs/screenshot-1.jpg)
+<img src="docs/screenshot-1.jpg" alt="Popup showing the weekly schedule editor and Fill Timesheet button" style="width:75%; height:auto;">
+<br><br>
+<img src="docs/screenshot-2.jpg" alt="Preview of all times which gonna be added to the timesheet" style="width:75%; height:auto;">
 
 ## Features
 
@@ -37,20 +39,18 @@ This extension is not published to the Chrome Web Store. Install it as an unpack
 
 Each weekday has two configurable time blocks:
 
-| Field | Format | Example |
-|-------|--------|---------|
+| Field | Format        | Example |
+| ----- | ------------- | ------- |
 | Start | `HH:MM` (24h) | `09:00` |
-| End | `HH:MM` (24h) | `17:30` |
+| End   | `HH:MM` (24h) | `17:30` |
 
 Set a block to `00:00 – 00:00` (or click the ✕ button) to leave it empty. Uncheck a day to skip it entirely.
 
 ## Permissions
 
-| Permission | Reason |
-|------------|--------|
-| `activeTab` | Detect the current BambooHR tab |
-| `scripting` | Inject the content script to read and fill the timesheet |
-| `storage` | Persist your weekly schedule locally |
-| `https://*.bamboohr.com/*` | Restrict all access to BambooHR pages only |
-
-
+| Permission                 | Reason                                                   |
+| -------------------------- | -------------------------------------------------------- |
+| `activeTab`                | Detect the current BambooHR tab                          |
+| `scripting`                | Inject the content script to read and fill the timesheet |
+| `storage`                  | Persist your weekly schedule locally                     |
+| `https://*.bamboohr.com/*` | Restrict all access to BambooHR pages only               |

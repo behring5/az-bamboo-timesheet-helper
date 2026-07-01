@@ -22,7 +22,7 @@ async function handleOpenPreview() {
   }
 
   try {
-    await waitForPayPeriod();
+    await waitForTimesheetSlats();
   } catch (e) {
     alert('[BambooHelper] Timed out waiting for the timesheet to load.\nPlease make sure the timesheet page is fully loaded and try again.');
     return;

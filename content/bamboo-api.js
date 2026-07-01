@@ -40,8 +40,6 @@ function getCsrfToken() {
  */
 function getFilledDatesFromDOM(targetYear, targetMonth) {
   const filled = new Set();
-  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
   document.querySelectorAll('.TimesheetSlat').forEach(slat => {
     if (!slat.querySelector('.TimeEntry')) return;
 
@@ -49,7 +47,7 @@ function getFilledDatesFromDOM(targetYear, targetMonth) {
     if (!dayDateEl) return;
 
     const [monStr, dayStr] = dayDateEl.textContent.trim().split(' ');
-    const monthIndex = MONTHS.indexOf(monStr);
+    const monthIndex = MONTH_INDEX[monStr] ?? -1;
     if (monthIndex === -1 || monthIndex !== targetMonth - 1) return;
 
     filled.add(formatDate(new Date(targetYear, monthIndex, Number(dayStr))));

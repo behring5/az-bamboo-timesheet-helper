@@ -1,6 +1,6 @@
 {
 	"name": "az-bamboohr-timesheet-helper",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "Auto-fill your BambooHR timesheet for the past month based on a weekly schedule template.",
 	"license": "ISC",
 	"author": "Christoph E",
